@@ -9,8 +9,8 @@ fig = plt.figure()
 
 grid = np.zeros((100, 100))
 grid[(20, 15)] = 1
-grid[(30, 45)] = 1
-grid[(45, 0)] = 1
+grid[(30, 95)] = 1
+grid[(70, 0)] = 1
 grid_history = np.zeros(grid.shape)
 grid_copy = deepcopy(grid)
 
@@ -36,6 +36,7 @@ def get_neighbors(r, c):
 def updatefig(*args):
     global grid, grid_history
 
+    # update grid
     for r in range(len(grid)):
         for c in range(len(grid[r])):
             if grid[r][c] == 1:
@@ -48,25 +49,16 @@ def updatefig(*args):
                     for n in neighbors:
                         if grid[n] == 0 and random() < T:
                             grid_copy[n] = 1
-    
-    # update grid from copy
-    for r in range(len(grid)):
-        for c in range(len(grid[r])):
-            grid[r][c] = grid_copy[r][c]
+    np.copyto(grid, grid_copy)
 
     # update history
     grid_history += np.clip(grid, 0, 1)
 
-    global can_stop
-    counts = np.unique(grid)
-    if len(counts) == 2:
-        if can_stop:
-            quit()
-        else:
-            can_stop = True
+    if 1 not in np.unique(grid):
+        quit()
 
     # im.set_array(grid_history / np.max(grid_history))
-    im.set_array(np.clip(grid_history / 100, 0, 1))
+    im.set_array(np.clip(grid_history / 200, 0, 1))
     return im,
 
 
