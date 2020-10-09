@@ -4,23 +4,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-fig = plt.figure()
 
-
-grid = np.zeros((100, 100))
-grid[(20, 15)] = 1
-grid[(30, 95)] = 1
-grid[(70, 0)] = 1
-grid_history = np.zeros(grid.shape)
-grid_copy = deepcopy(grid)
-
-grid_size = len(grid)               #* must be square
-
+# parameters
+num_init_infected = 3
+grid_size = 200
 N = grid_size ** 2
-T = 0.6
+T = 0.3
 R = 0.1
 
-can_stop = False
+# create grid and infect initial people randomly
+grid = np.zeros((grid_size, grid_size))
+for _ in range(num_init_infected):
+    grid[tuple(np.random.randint(0, grid_size, 2))] = 1
+
+# additional bookkeeping grids
+grid_history = np.zeros(grid.shape)
+grid_copy = deepcopy(grid)
 
 
 def get_neighbors(r, c):
@@ -33,12 +32,20 @@ def get_neighbors(r, c):
     return [x for x in possible if (0 <= x[0] < grid_size and 0 <= x[1] < grid_size)]
 
 
-def updatefig(*args):
+def gen():
+    global grid
+    t = 0
+    while 1 in np.unique(grid):
+        t += 1
+        yield t
+
+
+def updatefig(t):
     global grid, grid_history
 
     # update grid
-    for r in range(len(grid)):
-        for c in range(len(grid[r])):
+    for r in range(grid_size):
+        for c in range(grid_size):
             if grid[r][c] == 1:
                 # random recovery chance
                 if random() < R:
@@ -54,16 +61,12 @@ def updatefig(*args):
     # update history
     grid_history += np.clip(grid, 0, 1)
 
-    if 1 not in np.unique(grid):
-        quit()
-
-    # im.set_array(grid_history / np.max(grid_history))
-    im.set_array(np.clip(grid_history / 200, 0, 1))
+    im.set_array(grid_history / np.max(grid_history))
     return im,
 
 
-im = plt.imshow(grid, animated=True)
-# fig.colorbar(im)
+fig = plt.figure()
+im = plt.imshow(grid, cmap='magma', animated=True)
 
-ani = animation.FuncAnimation(fig, updatefig, interval=50, blit=True)
+ani = animation.FuncAnimation(fig, updatefig, frames=gen, repeat=False, interval=50, blit=True)
 plt.show()
